@@ -22,6 +22,8 @@ typedef struct J2meConfig {
     const char *data_dir;     /* record stores; created if missing */
     int         screen_w, screen_h;
     uint32_t    heap_bytes;   /* 0: 16 MB, as the desktop runner */
+    uint32_t    rewind_mb;    /* memory for the rewind history; 0: 256 MB.
+                                 The oldest entries go when it is full. */
     int64_t     epoch_ms;     /* System.currentTimeMillis() at start */
     /* System.out, System.err and VM messages; may be NULL. */
     void      (*console)(void *user, const char *text, int len);
@@ -62,6 +64,13 @@ bool j2me_load_state(const char *path);
  * empties the history. */
 bool j2me_rewind_push(void);
 bool j2me_rewind_back(void);
+
+/* How many entries the history holds; the oldest go when it is full. */
+uint32_t j2me_rewind_count(void);
+
+/* Goes back to the entry `back` places before the newest (0: the newest),
+ * dropping the newer ones. False if there is no such entry. */
+bool j2me_rewind_to(uint32_t back);
 
 /* Stops the game and frees everything. */
 void j2me_stop(void);

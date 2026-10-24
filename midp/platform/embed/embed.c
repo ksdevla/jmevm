@@ -118,6 +118,7 @@ bool j2me_start(const J2meConfig *c)
 
     EngineOptions opt = {0};
     opt.heap_bytes = c->heap_bytes ? c->heap_bytes : 16u << 20;   /* as the runner */
+    opt.rewind_mb = c->rewind_mb;
     opt.ticks_per_ms = 10000;
     opt.epoch_ms = c->epoch_ms;
     EngineApp app = {0};
@@ -206,7 +207,17 @@ bool j2me_rewind_push(void)
 
 bool j2me_rewind_back(void)
 {
-    if (!started || !engine_rewind_back())
+    return j2me_rewind_to(1);
+}
+
+uint32_t j2me_rewind_count(void)
+{
+    return started ? engine_rewind_count() : 0;
+}
+
+bool j2me_rewind_to(uint32_t back)
+{
+    if (!started || !engine_rewind_to(back))
         return false;
     clock_jumped();
     return true;

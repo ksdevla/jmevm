@@ -25,7 +25,7 @@ static EngineOptions options;
 static Zip        *system_zip, *app_zip;
 static const char *app_dir;
 static Cached     *classes, *files;
-/* The rewind history: about a minute at 10 entries a second fits easily. */
+/* The rewind history, made on the first push within options.rewind_mb. */
 static JmeRewind  *ring;
 
 static bool ends_with(const char *s, const char *suffix)
@@ -270,17 +270,28 @@ bool engine_save_state(const char *path)
 
 bool engine_rewind_push(void)
 {
-    if (!ring && jme_rewind_create((size_t)256 << 20, 30, &ring) != JME_OK)
+    size_t budget = (size_t)(options.rewind_mb ? options.rewind_mb : 256) << 20;
+    if (!ring && jme_rewind_create(budget, 30, &ring) != JME_OK)
         return false;
     return jme_rewind_push(ring, vm) == JME_OK;
 }
 
 bool engine_rewind_back(void)
 {
-    uint32_t n = ring ? jme_rewind_count(ring) : 0;
-    if (n < 2 || jme_rewind_load(ring, vm, 1) != JME_OK)
+    return engine_rewind_to(1);
+}
+
+uint32_t engine_rewind_count(void)
+{
+    return ring ? jme_rewind_count(ring) : 0;
+}
+
+bool engine_rewind_to(uint32_t back)
+{
+    uint32_t n = engine_rewind_count();
+    if (back >= n || jme_rewind_load(ring, vm, back) != JME_OK)
         return false;
-    jme_rewind_truncate(ring, n - 1);
+    jme_rewind_truncate(ring, n - back);
     return true;
 }
 

@@ -113,13 +113,22 @@ int main(int argc, const char **argv)
     }
 
     /* Rewind goes back to an earlier time. */
+    int64_t pushed_at[5];
     for (int i = 0; i < 5; i++) {
+        pushed_at[i] = j2me_time_ms();
         j2me_rewind_push();
         run(280 + i * 10, 10, &after_b, &sound);
     }
     int64_t before = j2me_time_ms();
-    if (!j2me_rewind_back() || j2me_time_ms() >= before) {
+    if (j2me_rewind_count() != 5 || !j2me_rewind_back() || j2me_time_ms() != pushed_at[3] ||
+        j2me_time_ms() >= before) {
         fprintf(stderr, "embed_test: rewind did not go back\n");
+        return 1;
+    }
+    /* Several entries at once; the newer ones are dropped. */
+    if (j2me_rewind_to(4) || !j2me_rewind_to(2) || j2me_time_ms() != pushed_at[1] ||
+        j2me_rewind_count() != 2) {
+        fprintf(stderr, "embed_test: rewind_to went wrong\n");
         return 1;
     }
     /* After a load the history is gone: it belonged to another timeline. */

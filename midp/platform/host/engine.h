@@ -10,6 +10,7 @@
 
 typedef struct EngineOptions {
     uint32_t heap_bytes;
+    uint32_t rewind_mb;        /* memory for the rewind history; 0: 256 MB */
     uint32_t ticks_per_ms;
     int64_t  epoch_ms;
     bool     gc_stress;
@@ -59,5 +60,10 @@ bool engine_load_state(const char *path);
  * empties the history. */
 bool engine_rewind_push(void);
 bool engine_rewind_back(void);
+/* How many entries the history holds (the oldest go when it is full). */
+uint32_t engine_rewind_count(void);
+/* Goes back to the entry `back` places before the newest (0: the newest),
+ * dropping the newer ones. False if there is no such entry. */
+bool engine_rewind_to(uint32_t back);
 
 #endif
