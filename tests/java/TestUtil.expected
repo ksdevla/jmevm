@@ -1,0 +1,57 @@
+[0, 1, 4, 9, 16, 25] size 6 capacity 8
+[first, 1, null, 4, x, 16, 25] first 25 null
+find 2 6 -1 1 0 true false
+remove true false [first, 1, null, 4, x, 25]
+grown [first, 1, null, 4, x, 25, null] 7
+shrunk [first, 1] first 2
+elements first;1;
+empty true [] false
+no element
+elementAt java.lang.ArrayIndexOutOfBoundsException
+firstElement java.util.NoSuchElementException
+insertElementAt java.lang.ArrayIndexOutOfBoundsException
+removeElementAt java.lang.ArrayIndexOutOfBoundsException
+lastIndexOf java.lang.IndexOutOfBoundsException
+self [(this Collection)]
+push abc false
+search 1 3 -1
+pop cb peek a 1
+empty stack null
+41 {189=n27, nine=9, 91=n13, 182=n26, 84=n12, five=5, 175=n25, six=6, one=1, 77=n11, seven=7, 168=n24, eleven=11, 70=n10, 161=n23, 63=n9, eight=8, 154=n22, 56=n8, 147=n21, ten=10, 49=n7, 140=n20, 42=n6, two=2, 133=n19, 35=n5, four=4, 126=n18, 28=n4, three=3, 119=n17, 21=n3, 112=n16, 14=n2, 203=n29, 105=n15, 7=n1, 196=n28, 98=n14, 0=n0}
+get 7 n2 null true true false
+put again 1 remove 2 null 40
+keys nine five six one seven eleven eight ten four three values 80 left 30
+small {5=five, selfish=(this Map), q=true} false
+cleared {} true
+null value
+null key
+negative capacity
+ints -1170105035 234785527 -1360544799 205897768 0 987835 595021505 8 697878 196118093 2 473177 791955276 2 289142 482678025 
+others 8552898714322622292 0.78290176 0.998178600062844
+dice 1028 997 1030 1063 931 951
+bound must be positive
+unseeded differ true
+0 1970-1-1 0:0:0.0 dow 5 0am
+951782400000 2000-2-29 0:0:0.0 dow 3 0am
+1709210096789 2024-2-29 12:34:56.789 dow 5 0pm
+-1 1969-12-31 23:59:59.999 dow 4 11pm
+-2208988800000 1900-1-1 0:0:0.0 dow 2 0am
+4102444800000 2100-1-1 0:0:0.0 dow 6 0am
+253402300799999 9999-12-31 23:59:59.999 dow 6 11pm
+set 1709251140000 2024-2-29 23:59:0.0 dow 5 11pm
+lenient 2024-3-2 23:59:0.0 dow 7 11pm
+carry 2025-2-2 23:58:59.0 dow 1 11pm
+12-hour 2025-2-2 15:58:59.0 dow 1 3pm
+24-hour 2025-2-2 1:58:59.0 dow 1 1am
+zone GMT+05:30 19800000 1970-1-1 5:30:0.0 dow 5 5am
+zone GMT-08:00 1969-12-31 16:0:0.0 dow 4 4pm 0
+id GMT+1 -> GMT+01:00 3600000 false 3600000
+id GMT-11:00 -> GMT-11:00 -39600000 false -39600000
+id GMT+2400 -> GMT 0 false 0
+id UTC -> UTC 0 false 0
+id GMT+5:7 -> GMT 0 false 0
+id Mars/Olympus -> GMT 0 false 0
+order true false false false
+equal true true 2
+now true
+done

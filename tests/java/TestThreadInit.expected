@@ -1,0 +1,7 @@
+init start
+init end
+other sees 42
+main read 42
+main: java.lang.ExceptionInInitializerError
+second: java.lang.NoClassDefFoundError
+done

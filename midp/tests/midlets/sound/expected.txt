@@ -1,0 +1,34 @@
+ok supported content types
+ok new player is unrealized
+ok content type needs realize
+ok realized
+ok midi content type
+ok midi duration
+ok prefetched
+ok unknown control
+ok volume control
+ok volume level
+ok volume clamps to 100
+ok mute
+ok started
+ok loop count while started
+ok prefetched again at the end
+ok media time at the end
+ok events of two loops
+ok deallocate
+ok closed
+ok close event
+ok start after close
+ok wav duration
+ok stopped part-way
+ok wav events
+ok wav media time at the end
+ok rewound
+ok tone control
+ok tone sequence duration
+ok bad tone sequence
+ok tone sequence played
+ok note above 127
+ok negative duration
+ok unknown locator
+33 checks, 0 failures

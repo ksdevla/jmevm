@@ -1,0 +1,6 @@
+MIDlet-Name: Game
+MIDlet-Version: 1.0
+MIDlet-Vendor: jmevm
+MIDlet-1: Game, , jmevm.test.game.GameMIDlet
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0

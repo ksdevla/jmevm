@@ -1,0 +1,59 @@
+ok textfield contents
+ok textfield longer than its maximum
+ok textfield insert
+ok textfield delete
+ok textfield getChars
+ok textfield chars
+ok textfield setMaxSize truncates
+ok textfield after truncation
+ok textfield caret
+ok numeric field rejects letters
+ok numeric field takes a minus sign
+ok numeric initial text
+ok password flag
+ok password modifier
+ok zero maximum size
+ok textbox
+ok choice append
+ok exclusive choice selects the first
+ok exclusive choice select
+ok exclusive choice ignores deselection
+ok deleting the selected element selects another
+ok choice set and insert
+ok choice index outside
+ok multiple choice has no selected index
+ok multiple choice starts unselected
+ok multiple choice flags
+ok popup choice selects the first
+ok implicit choice group
+ok list
+ok list deleteAll
+ok gauge
+ok gauge clamps to the maximum
+ok gauge clamps to zero
+ok lower maximum lowers the value
+ok interactive gauge needs a maximum
+ok indefinite gauge
+ok alert default timeout
+ok alert forever
+ok alert timeout
+ok alert timeout of 0
+ok alert type and text
+ok form append text
+ok text becomes a string item
+ok form append item
+ok form insert
+ok an item belongs to one form
+ok a removed item can move
+ok form deleteAll
+ok form index outside
+ok ticker
+ok title
+ok command
+ok spacer
+ok image item
+ok date field starts empty
+ok date field
+ok button appearance
+57 checks, 0 failures
+form shown

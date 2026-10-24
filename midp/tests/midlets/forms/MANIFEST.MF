@@ -1,0 +1,6 @@
+MIDlet-Name: Forms
+MIDlet-Version: 1.0
+MIDlet-Vendor: jmevm
+MIDlet-1: Forms, , jmevm.test.forms.FormsMIDlet
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0

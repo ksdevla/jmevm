@@ -1,0 +1,22 @@
+ok showNotify before the canvas is used
+ok pointer events
+ok canvas size
+ok game actions and key codes
+ok key names
+ok game action of an invalid key
+ok serviceRepaints paints before it returns
+ok callSerially
+ok hideNotify and showNotify
+9 checks, 0 failures
+pressed 20,30
+dragged 25,40
+dragged 40,60
+released 40,60
+pressed 200,300
+released 200,300
+key -1 pressed, game action 1
+key -1 released
+key 53 pressed, game action 8
+key 53 released
+key -5 pressed, game action 8
+key -5 released

@@ -1,0 +1,6 @@
+MIDlet-Name: Touch
+MIDlet-Version: 1.0
+MIDlet-Vendor: jmevm
+MIDlet-1: Touch, , jmevm.test.touch.TouchMIDlet
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0

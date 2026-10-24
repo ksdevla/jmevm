@@ -1,0 +1,23 @@
+main main 5 true
+before start false counter-3
+counted 10000 alive false
+started twice
+priority 10 inherited 5
+runnable ran in true
+bad priority
+toString names it true
+consumed 125250
+events [sleep interrupted, wait interrupted]
+pending interrupt
+wait without the lock
+notify without the lock
+negative sleep
+timed wait true
+reentrant
+woke in order [20, 40, 60]
+cancel unrun true false
+timer [once, repeat 1, repeat 2, repeat 3]
+task reused
+negative delay
+timer cancelled
+done

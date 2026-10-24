@@ -1,0 +1,15 @@
+counter 1 2
+fields 12
+moved 13 24 moved
+squares 25 6
+words 300 w0 w299
+shout HELLO, HOST
+caught bad input
+wide 2199023255552 2.5
+prop yes null
+resource Hello from the host true
+events 510
+poll -1
+short wait -1
+other thread got 105
+counter 3

@@ -1,0 +1,147 @@
+run 1
+ok rms open again gives the same store
+ok rms name
+ok rms starts empty
+ok rms first id
+ok rms sizes
+ok rms ids count up
+ok rms empty record
+ok rms count
+ok rms next id
+ok rms version counts changes
+ok rms getRecord
+ok rms empty record reads as null
+ok rms record sizes
+ok rms getRecord into a buffer
+ok rms buffer contents
+ok rms buffer too small
+ok rms setRecord
+ok rms deleted record
+ok rms delete twice
+ok rms record 0
+ok rms ids are not reused
+ok rms listener
+ok rms listener removed
+ok rms enumeration count
+ok rms enumeration order
+ok rms enumeration end
+ok rms past the end
+ok rms enumeration reset
+ok rms enumeration not kept updated
+ok rms enumeration rebuilt
+ok rms destroyed enumeration
+ok rms all records
+ok rms kept updated
+ok rms kept updated order
+ok rms unordered enumeration sees every record
+ok rms delete an open store
+ok rms still open after one of two closes
+ok rms closed
+ok rms reopened
+ok rms missing store
+ok rms name too long
+ok rms empty name
+ok rms own suite by vendor and name
+ok rms another suite's missing store
+ok rms list
+ok rms deleted store
+ok sprite raw frames
+ok sprite size
+ok sprite default sequence
+ok sprite nextFrame
+ok sprite prevFrame wraps
+ok sprite sequence resets the frame
+ok sprite sequence index
+ok sprite sequence wraps
+ok sprite sequence length
+ok sprite frame outside the sequence
+ok sprite sequence with a missing frame
+ok sprite default sequence again
+ok sprite frame size not dividing the image
+ok sprite position from the reference pixel
+ok sprite none position
+ok sprite none reference pixel
+ok sprite mirror position
+ok sprite mirror reference pixel
+ok sprite rot180 position
+ok sprite rot180 reference pixel
+ok sprite mirror rot180 position
+ok sprite mirror rot180 reference pixel
+ok sprite rot90 position
+ok sprite rot90 reference pixel
+ok sprite rot270 position
+ok sprite rot270 reference pixel
+ok sprite mirror rot90 position
+ok sprite mirror rot90 reference pixel
+ok sprite mirror rot270 position
+ok sprite mirror rot270 reference pixel
+ok sprite rotated size
+ok sprite setImage frames
+ok sprite setImage size
+ok sprite copy
+ok sprite move
+ok collide pixel on opaque
+ok collide pixel on transparent
+ok collide rectangles
+ok collide just outside
+ok collide mirrored
+ok collide rotated
+ok collide with an image
+ok collision rectangle
+ok invisible sprites do not collide
+ok collide empty cell
+ok collide tile
+ok collide tile pixels
+ok collide animated tile
+ok tiled size
+ok tiled grid
+ok tiled cell size
+ok tiled cells start empty
+ok tiled first animated tile
+ok tiled second animated tile
+ok tiled animated tile
+ok tiled animated tile set
+ok tiled cell
+ok tiled fillCells
+ok tiled cell outside
+ok tiled tile that does not exist
+ok tiled animated tile that does not exist
+ok tiled animated tile of a missing tile
+ok tiled more tiles keep the cells
+ok tiled fewer tiles reset the cells
+ok tiled animated tiles are gone
+ok lm append
+ok lm insert
+ok lm append again moves
+ok lm remove
+ok lm insert past the end
+ok lm top layer
+ok lm bottom layer
+ok lm outside the view window
+ok lm paint restores the graphics
+ok io resource
+ok io resource next to the class
+ok io absolute path to the same
+ok io missing resource
+ok io read into an array
+ok io skip
+ok io read after skip
+ok io unknown protocol
+ok io no network
+ok io malformed name
+ok nokia FullCanvas takes no commands
+ok nokia soft key codes
+ok nokia createImage
+ok nokia drawPixels with transparency
+ok nokia drawPixels flipped
+ok nokia drawPixels rotated 90
+ok nokia drawPixels 4444
+ok nokia getPixels
+ok nokia fillPolygon
+ok nokia native pixel format
+ok nokia sound starts stopped
+ok nokia sound playing
+ok nokia sound done
+ok nokia sound events
+144 checks, 0 failures
+coin 2 in frame 18, score 10

@@ -1,0 +1,8 @@
+before
+Exception in thread "main" java.lang.IllegalStateException: boom
+	at TestUncaught.fail(TestUncaught.java:16)
+	at TestUncaught.run(TestUncaught.java:11)
+	at TestUncaught.run(TestUncaught.java:12)
+	at TestUncaught.run(TestUncaught.java:12)
+	at TestUncaught.run(TestUncaught.java:12)
+	at TestUncaught.main(TestUncaught.java:7)

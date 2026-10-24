@@ -1,0 +1,69 @@
+overflow -2147483648 2147483647 -2147483648 -2147483648
+div 3 -3 1 -1
+shift 2 -4 15 -2147483648
+narrow -56 4464 A 122
+bits 120 305419897 -305419897 -305419897
+divide by zero caught
+increments 17
+long -9223372036854775808 9223372036854775805 7 -144115188075855872
+long ops 1234567890 123 4353767495901316871 1912276171
+compare pos -9223372036854775808 9223372036854775807
+double 0.3333333333333333 1.0 0.30000000000000004 1.0E21 1.0E-7
+float 0.33333334 1.0 100.0 1.5E10 3.4E38
+special Infinity -Infinity NaN -0.0
+to int 3 -3 2147483647 0 -9223372036854775808 -2147483648
+compare false true false true true
+bits 3ff8000000000000 c0100000 4.0 0.5
+parse 12500.0 -0.001 1.0E-300 Infinity
+remainder 1.5 -1.5 NaN
+min 4.9E-324 1.4E-45 max 1.7976931348623157E308 3.4028235E38
+boxed 2.5 2 true false true 1074003968 1075838976
+toString ff -11111111 z 7 -22341010611245052052301
+unsigned ffffffff 37777777770 1010 0
+parse -2147483648 77 1295 -9223372036854775808 -32768 127
+bad number []
+bad number [-]
+bad number [2147483648]
+bad number [12a]
+bad number [ 1]
+bad number [99999999999999999999]
+byte range
+boxes 7 true false 0 1 true 1237 x -3 5
+upper 41 5a 35 20 c9 c9 df 178 410 42f 391 3a9 
+lower 61 7a 35 20 e9 e9 df ff 430 44f 3b1 3c9 
+kinds lUd.lUlllUlU
+digits 7 15 15 -1 35 -1
+abs 5 -2147483648 2.5 0.0 7 1.5
+minmax -4 9 -0.0 0.0 NaN 1.5
+round -2.0 -1.0 2.0 1.0 -0.0
+roots 1.4142135623730951 NaN 100000.0
+trig 500000000000 540302305868 546302489844 -487506025088
+angles 3.141592653589793 57.29577951308232 2.718281828459045
+caught out of lives 4200 finally order 123
+as string GameOver: out of lives
+runtime java.lang.NullPointerException
+runtime java.lang.ClassCastException
+runtime java.lang.ArrayIndexOutOfBoundsException
+runtime java.lang.ArrayStoreException
+runtime java.lang.NegativeArraySizeException
+throwable java.lang.Error: custom error
+plain java.lang.RuntimeException state
+finally returns 1
+Rect 2x3 is rect true square false
+Square 4 is rect true square true
+total area 22
+names java.lang.String [I [[Ljava.lang.String; TestLang$Shape
+forName java.util.Vector true false true false true false
+not found
+init order First Second 13
+identity true true false true
+grid 20 99 3 4
+ragged 3 0
+arraycopy elloo
+defaults 0 false 0.0 null
+array store
+copy out of bounds
+switch mon tue mid mid other far other 
+labels 67
+loops 12 false big
+done

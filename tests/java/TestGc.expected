@@ -1,0 +1,8 @@
+list 2998000
+cycle 1 1 3
+hash true
+monitors 251
+table 500 1374750 429 700/
+intern true true
+arrays 0 3.0 m9 null
+churn 10000 2998000 false null

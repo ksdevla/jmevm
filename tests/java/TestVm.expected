@@ -1,0 +1,11 @@
+reflect TestVm$Made M 42 Mc true
+names [I [[Ljava.lang.String; java.lang.String true true
+assignable true false true
+iface 10 held
+arrays true true b 9 true true
+sync 21 42
+wide 415282
+switch 52
+wides 2432902008176640005 2.32019615953125E12 304112751022080000 2.3201962E12
+strswitch AP?
+chars D 68 E d

@@ -1,0 +1,64 @@
+[Hello, World] 12 W HELLO, WORLD hello, world
+World Hello 0 Hello, World! HeLLo, WorLd 0 x
+equal true true false true true
+compare -1 1 -2 0
+hash 0 97 -505841268 34305
+valueOf true c -12 1099511627776 0.5 1.0E100 null ok bc
+getChars bcd abc
+intern true false
+charAt out of range
+substring out of range
+indexOf 5 9 -1 0 15 0 22 0
+lastIndexOf 20 9 15 0 22 -1 20
+starts true true false true true true false true
+start 42 -7 1.25 true c null xy 31
+falsere12.5start! r
+?trats5.21e 11
+?t
+capacity 2 true 0123456789
+padded 12 0
+builder 0,1,2,3,4 4,3,2,1,0 9
+insert out of range
+surrogates d83d de00
+n=7, half=3.5, char=h, null=null
+UTF-8 41c3a9e282acd096f09f9880 -> 41 e9 20ac 416 d83d de00
+ISO-8859-1 41e93f3f3f -> 41 e9 3f 3f 3f
+US-ASCII 413f3f3f3f -> 41 3f 3f 3f 3f
+UTF-16BE 004100e920ac0416d83dde00 -> 41 e9 20ac 416 d83d de00
+UTF-16LE 4100e900ac2016043dd800de -> 41 e9 20ac 416 d83d de00
+UTF-16 feff004100e920ac0416d83dde00 -> 41 e9 20ac 416 d83d de00
+windows-1251 413f88c63f -> 41 3f 20ac 416 3f
+windows-1252 41e9803f3f -> 41 e9 20ac 3f 3f
+default e9783f e9 41
+malformed c3 -> fffd
+malformed e282 -> fffd
+malformed ff41 -> fffd 41
+malformed c080 -> fffd fffd
+malformed eda080 -> fffd
+malformed f09f41 -> fffd 41
+malformed e24142 -> fffd 41 42
+bom 41  41 fffd
+offsets hi bc
+unsupported encoding
+written 342 true
+read back 318 true -1
+chars 41 e9 fffd 
+skip 9 y false
+no reset
+closed
+data 52 01fefed420accafebabeeeddef0b82167eeb40600000bfb999999999999a000e68c3a9c080e282aceda0bdedb880006f006b0807
+read true -2 -300 20ac cafebabe -1234567890123456789 3.5 -0.1
+utf 68 e9 0 20ac d83d de00 ok 8 1
+last 7 -1
+reset 7 0
+eof
+short read
+bad utf java.io.UTFDataFormatException
+too long java.io.UTFDataFormatException
+window 3 00414e5b 7 7 -1 -1 -1
+reset to 65
+bad range
+printed 63 [1-2 0.25 1.0E-5 false null #|line|obj|ch|7|z|true|3|1.5|2.5|ABC] false
+error after close true
+reset sink ab 2
+done

@@ -1,0 +1,17 @@
+jmevm
+Copyright 2026 ksdevla
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Parts of the MIDP layer in midp/ and some tests come from J2MEmu (Apache-2.0,
+ksdevla).
+
+midp/src/midp/font_data.c holds bitmap fonts rendered from DejaVu Sans, under
+the Bitstream Vera licence (LICENSE-DejaVu.txt):
+Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is
+a trademark of Bitstream, Inc. DejaVu changes are in the public domain.
+
+src/fdlibm.c is ported from fdlibm (http://www.netlib.org/fdlibm/):
+Copyright (C) 1993, 2004 by Sun Microsystems, Inc. All rights reserved.
+Permission to use, copy, modify, and distribute this software is freely
+granted, provided that this notice is preserved.

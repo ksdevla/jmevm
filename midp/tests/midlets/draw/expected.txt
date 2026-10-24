@@ -1,0 +1,80 @@
+ok mutable image
+ok mutable image size
+ok mutable image starts white
+ok fillRect area
+ok fillRect first pixel
+ok fillRect last pixel
+ok fillRect excludes right edge
+ok fillRect excludes bottom edge
+ok drawRect outline
+ok drawRect corners
+ok drawRect inside untouched
+ok horizontal line includes both ends
+ok diagonal line
+ok one-pixel line
+ok graphics of an immutable image
+ok zero-width image
+ok copyArea
+ok initial clip is the image
+ok fill inside a clip
+ok clip
+ok clipRect intersects
+ok translate moves drawing
+ok translation
+ok translations add up
+ok clip is in translated coordinates
+ok translated clip
+ok getColor
+ok components
+ok setColor(r, g, b)
+ok setColor ignores the top byte
+ok setGrayScale
+ok colour component above 255
+ok stroke style
+ok pixels are opaque
+ok drawRegion none
+ok drawRegion mirror rot180
+ok drawRegion mirror
+ok drawRegion rot180
+ok drawRegion mirror rot270
+ok drawRegion rot90
+ok drawRegion rot270
+ok drawRegion mirror rot90
+ok BOTTOM|RIGHT anchor
+ok HCENTER|VCENTER anchor
+ok anchor 0 is TOP|LEFT
+ok drawImage with BASELINE
+ok region outside the image
+ok createImage(region, rot90)
+ok transparent pixel leaves the background
+ok opaque pixel
+ok without alpha processing the pixel is opaque
+ok getRGB keeps transparency
+ok getRGB of an opaque RGB image
+ok drawRGB
+ok getRGB offset and scanlength
+ok getRGB scanlength too small
+ok PNG from the jar
+ok PNG pixels, palette and tRNS
+ok PNG from bytes at an offset
+ok missing image
+ok bytes that are no image
+ok font attributes
+ok default font is plain
+ok static text font
+ok empty string width
+ok substringWidth
+ok charsWidth
+ok height and baseline
+ok text drawn
+ok text inside its box
+ok BASELINE anchor
+ok RIGHT anchor
+ok drawString with VCENTER
+ok drawString(null)
+ok fillTriangle
+ok fillArc circle
+ok fillArc quarter
+ok drawArc outline
+ok fillRoundRect
+79 checks, 0 failures

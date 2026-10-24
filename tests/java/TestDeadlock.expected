@@ -1,0 +1,2 @@
+main waits for b
+jmevm: deadlock: every thread is waiting and none can wake it

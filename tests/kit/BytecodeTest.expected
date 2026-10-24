@@ -1,0 +1,69 @@
+idiv -2147483648 0 -3 -1 1
+ishift 2 -1 1 0 -4
+iover 2147483647 -2147483648 -2147483648 -2147483648
+narrow -56 4464 65535 -112 1
+iinc -68995
+idiv0 / by zero
+irem0 caught
+ldiv -9223372036854775808 0 -3 -1
+lshift 2 1 -16 -9223372036854775808
+lmul -2919049247681137751 -9223372036854775808
+lcmp false true true
+lbits 67555025218437360 -6148914691236517206 -1
+ldiv0 caught
+fnan false false false true false false
+finf NaN NaN -Infinity -Infinity true
+frem 1.5 -1.5 1.5 1.0 NaN 2.0
+fmath 0.3 0.33333334 1.6777216E7 Infinity 0.0
+fstr 1.0 100.0 1.0E7 0.001 1.0E-4 123456.79 3.4028235E38 1.4E-45
+fbits c0200000 1.0000001 7fc00000
+dnan false false false true true
+drem 1.5 -1.5 1.0 -0.0 NaN
+dmath 0.30000000000000004 0.3333333333333333 Infinity 1.4142135623730951 -2.0 -1.0
+dstr 1.0 1.0E7 0.001 9.999E-4 1.23456789E8 1.7976931348623157E308 4.9E-324 -0.0
+dparse 1500.0 -2.25 3.4028235E38 0.1
+dparse bad caught
+dabs 3.5 0.0 -0.0 -1.0 -2147483648
+f2i 2147483647 -2147483648 0 -2 9223372036854775807 0
+d2i 2147483647 -9223372036854775808 0 0 A
+i2f 1.6777216E7 9.223372036854776E18 -9.223372E18 9.007199E15
+d2f Infinity 0.0 0.1 0.10000000149011612
+l2i 878082192 32767 -128
+finally 2 32 21 122 abcdexf
+replaced java.lang.IllegalArgumentException second
+deep 42 code 42 true
+cce caught
+ase caught
+nase caught
+throw null caught
+cnfe caught
+recurse 400
+throwable err java.lang.Error: err null
+arrays true 3 99 3 4
+overlap 121234
+clone 1 9 true 6
+copyref y
+prim falsetrue hi 3
+arraycopy bounds caught
+intern true false true true true
+sb QdcYXba 7
+str 3 HELLO t| -1 xy 5 true
+valueOf true c 12 1.5 -123 ff 9000000000
+switch q
+chars true Z true 113
+iface 9 Base9 3 true runnable
+abstract 18 true false
+hashkey two false
+clinit 7 [] 2 PC
+clinit failed once
+clinit failed twice
+synchronized 1500 20
+notify unowned caught
+wait unowned caught
+released -1
+consumer 5
+timed wait true false
+sleeper interrupted
+waiter interrupted
+threads alive false false main
+done
