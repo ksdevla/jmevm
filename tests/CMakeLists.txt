@@ -138,6 +138,9 @@ java_test(determinism.stripes ARGS --print-ticks ${lib} ${stripes} ${again})
 # the same output, exit code and final tick; damaged snapshots must be
 # refused. The rewind variant checks every entry of a rewind ring. Steps are
 # chosen for 20-50 snapshots per program.
+# The history variant records the every-frame history at each snapshot and
+# steps back through it: every step must give the snapshot exactly, and the
+# program must go on from the middle one like the full run.
 # snapshot_test(<name> <step> ARGS <runner args...> [EXPECTED <file>] [EXIT_CODE <n>])
 function(snapshot_test name step)
     cmake_parse_arguments(P "" "EXPECTED;EXIT_CODE" "ARGS" ${ARGN})
@@ -150,6 +153,7 @@ function(snapshot_test name step)
     endif()
     java_test(snapshot.${name} ARGS --snapshot-check ${step} ${P_ARGS} ${extra})
     java_test(rewind.${name} ARGS --rewind-check ${step} ${P_ARGS} ${extra})
+    java_test(history.${name} ARGS --history-check ${step} ${P_ARGS} ${extra})
 endfunction()
 
 set(j ${lib} -cp ${T}/java)

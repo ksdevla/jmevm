@@ -132,6 +132,7 @@ void fill_stack_trace(VM *vm, Thread *t, Ref ex, int skip_init) {
 		*e++ = (i32)f->pc;
 	}
 	*(Ref *)FIELD_PTR(vm, ex, vm->f_throwable_trace) = trace;
+	CARD_MARK(vm, ex + vm->f_throwable_trace);
 }
 
 void throw_new(VM *vm, const char *cls, const char *msg) {
@@ -151,6 +152,7 @@ void throw_new(VM *vm, const char *cls, const char *msg) {
 			return;
 		}
 		*(Ref *)FIELD_PTR(vm, ex, vm->f_throwable_message) = s;
+		CARD_MARK(vm, ex + vm->f_throwable_message);
 	}
 	fill_stack_trace(vm, t, ex, 0);
 	UNROOT(vm, 1);
@@ -434,6 +436,7 @@ static Ref multi_new(VM *vm, Class *c, const i32 *counts, u32 dims) {
 			return 0;
 		}
 		REF_ELEMS(vm, a)[i] = sub;
+		CARD_MARK(vm, a + ARRAY_DATA + (u32)i * 4);
 	}
 	UNROOT(vm, 1);
 	return a;
@@ -701,6 +704,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 			Slot v = *--sp; i32 i = POPI(); Ref a = POPR();
 			ARRAY_CHECK(a, i);
 			((Slot *)ARRAY_PTR(vm, a))[i] = v;
+			CARD_MARK(vm, a + ARRAY_DATA + (u32)i * 4);
 			pc++;
 			break;
 		}
@@ -708,6 +712,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 			i64 v = POPJ(); i32 i = POPI(); Ref a = POPR();
 			ARRAY_CHECK(a, i);
 			((i64 *)ARRAY_PTR(vm, a))[i] = v;
+			CARD_MARK(vm, a + ARRAY_DATA + (u32)i * 8);
 			pc++;
 			break;
 		}
@@ -720,6 +725,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 				THROW("java/lang/ArrayStoreException", name);
 			}
 			REF_ELEMS(vm, a)[i] = v;
+			CARD_MARK(vm, a + ARRAY_DATA + (u32)i * 4);
 			pc++;
 			break;
 		}
@@ -728,6 +734,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 			ARRAY_CHECK(a, i);
 			if (class_of(vm, a)->elem_type == T_BOOLEAN) v &= 1;
 			((i8 *)ARRAY_PTR(vm, a))[i] = (i8)v;
+			CARD_MARK(vm, a + ARRAY_DATA + (u32)i);
 			pc++;
 			break;
 		}
@@ -735,6 +742,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 			i32 v = POPI(); i32 i = POPI(); Ref a = POPR();
 			ARRAY_CHECK(a, i);
 			((u16 *)ARRAY_PTR(vm, a))[i] = (u16)v;
+			CARD_MARK(vm, a + ARRAY_DATA + (u32)i * 2);
 			pc++;
 			break;
 		}
@@ -1046,6 +1054,7 @@ void interp_run(VM *vm, Thread *t, u64 limit) {
 				Ref o = sp[wide ? -3 : -2];
 				if (o == 0) THROW_NPE();
 				void *p = FIELD_PTR(vm, o, fl->offset);
+				CARD_MARK(vm, o + fl->offset);
 				if (wide) {
 					*(i64 *)p = POPJ();
 				} else {

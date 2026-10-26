@@ -317,6 +317,24 @@ static JmeStatus save(void *user, JmeWriteFn write, void *write_user)
     return o.status;
 }
 
+/* Whether saved state data (already checked) holds exactly the stores there are now. */
+static bool same_as_now(const void *data, size_t len)
+{
+    StateIn in = {data, (const uint8_t *)data + len, false};
+    if (state_get_u32(&in) != count)
+        return false;
+    for (uint32_t i = 0; i < count; i++) {
+        uint32_t       kn = state_get_u32(&in);
+        const uint8_t *k = state_get(&in, kn);
+        uint32_t       dn = state_get_u32(&in);
+        const uint8_t *d = state_get(&in, dn);
+        if (kn != strlen(stores[i].key) || memcmp(k, stores[i].key, kn) != 0 || dn != stores[i].len ||
+            (dn && memcmp(d, stores[i].data, dn) != 0))
+            return false;
+    }
+    return true;
+}
+
 static JmeStatus load(void *user, const void *data, size_t len)
 {
     (void)user;
@@ -332,6 +350,8 @@ static JmeStatus load(void *user, const void *data, size_t len)
     }
     if (in.bad || in.p != in.end)
         return JME_E_FORMAT;
+    if (same_as_now(data, len))
+        return JME_OK;   /* the usual case when rewinding: no file to touch */
 
     for (uint32_t i = 0; i < count; i++)
         file_delete(stores[i].key);

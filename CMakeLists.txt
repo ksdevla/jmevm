@@ -34,6 +34,8 @@ endif()
 file(GLOB vm_sources CONFIGURE_DEPENDS src/*.c)
 add_library(jmevm STATIC ${vm_sources})
 target_include_directories(jmevm PUBLIC include PRIVATE src)
+# Debug builds check that every heap write marked its card (history.c).
+target_compile_definitions(jmevm PRIVATE $<$<CONFIG:Debug>:JMEVM_HISTORY_VERIFY>)
 # Floating point must not be contracted into FMA, so results match on every
 # platform. Calling an undeclared function or mixing pointer types is always
 # a bug.

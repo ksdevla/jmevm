@@ -305,6 +305,7 @@ struct JmeVM {
 	u8 *heap;
 	u32 heap_size;
 	u32 heap_top;
+	u8 *cards;                 /* one per CARD bytes of heap: written since the history looked */
 	u32 hash_state;
 	u32 gc_count;
 	Ref **c_roots;
@@ -376,6 +377,15 @@ const char *sym_utf8(VM *vm, Utf8 s);
 
 /* ---- heap.c ---- */
 JmeStatus heap_init(VM *vm);
+
+/* The card table: every write to the heap marks the card (CARD bytes) it
+ * falls in, so the history (history.c) compares only those. A write that
+ * misses its mark makes rewinding wrong; debug builds check for that. */
+#define CARD_SHIFT 9u
+#define CARD (1u << CARD_SHIFT)
+#define CARD_MARK(vm, off) ((vm)->cards[(u32)(off) >> CARD_SHIFT] = 1)
+/* Marks the cards of heap bytes [from, to). */
+void heap_mark(VM *vm, u32 from, u32 to);
 void heap_free(VM *vm);
 /* Zeroed object of size bytes with its header set, or 0 when the heap is full
  * even after a collection. Throws nothing. */
@@ -513,6 +523,14 @@ int java_parse_float(const char *s, float *out);
 /* The whole machine state as snapshot bytes, in a malloc'd buffer. */
 JmeStatus snapshot_build(VM *vm, u8 **out, size_t *len);
 u64 fnv1a64(const void *data, size_t len);
+/* The sections after HEAP (CLAS to HOST) into *buf, which grows to *cap and
+ * is kept for the next call. */
+JmeStatus snapshot_rest(VM *vm, u8 **buf, size_t *cap, size_t *len);
+/* Restores the rest in place, after the heap was; JME_E_UNSUPPORTED when
+ * classes were loaded since, which only snapshot_load_parts can undo. */
+JmeStatus snapshot_rest_restore(VM *vm, const u8 *rest, size_t len);
+/* A full, checked load of vm's current heap with this rest. */
+JmeStatus snapshot_load_parts(VM *vm, const u8 *rest, size_t len);
 
 /* ---- lz.c: byte-oriented LZ77 for snapshots and rewind deltas ---- */
 /* Worst-case compressed size of n bytes. */

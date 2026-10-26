@@ -14,6 +14,7 @@
  * Self-checks (testing aids; see check.h), which exit with 4 on a failure:
  *   --snapshot-check STEP  snapshot every STEP ticks; each must restore exactly
  *   --rewind-check STEP    the same through a rewind ring
+ *   --history-check STEP   the same through the every-frame history
  *   --check-stats          print snapshot and ring sizes on stderr
  *   --test-host            add the test host's natives and state (testhost.h)
  */
@@ -263,8 +264,9 @@ static int run(int argc, char **argv) {
 			usage();
 			return EXIT_USAGE;
 		}
-		if (strcmp(a, "--snapshot-check") == 0 || strcmp(a, "--rewind-check") == 0) {
-			check_rewind = a[2] == 'r';
+		if (strcmp(a, "--snapshot-check") == 0 || strcmp(a, "--rewind-check") == 0
+				|| strcmp(a, "--history-check") == 0) {
+			check_rewind = a[2] == 'r' ? 1 : a[2] == 'h' ? 2 : 0;
 			check_step = strtoull(argv[++i], NULL, 10);
 			if (check_step == 0) {
 				usage();

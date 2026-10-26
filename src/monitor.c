@@ -43,6 +43,7 @@ static Monitor *monitor_of(VM *vm, Ref obj) {
 	if (OBJ(vm, obj)->monitor == 0) {
 		u32 id = monitor_new(vm);
 		OBJ(vm, obj)->monitor = id;
+		CARD_MARK(vm, obj);
 	}
 	return &vm->monitors[OBJ(vm, obj)->monitor];
 }

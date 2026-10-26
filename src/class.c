@@ -550,6 +550,7 @@ Ref class_mirror(VM *vm, Class *c) {
 		Ref m = new_object(vm, vm->c_class);
 		if (m == 0) return 0;
 		*(i32 *)FIELD_PTR(vm, m, vm->f_class_id) = (i32)c->id;
+		CARD_MARK(vm, m + vm->f_class_id);
 		c->mirror = m;
 	}
 	return c->mirror;

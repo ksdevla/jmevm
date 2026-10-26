@@ -311,8 +311,24 @@ static JmeStatus load(void *user, const void *data, size_t len)
 
     for (int s = 0; s < SYNTH_SLOTS; s++)
         pal_audio_stop(s);
+    /* A clip with the same type and bytes keeps its decoded sound: rewinding
+     * loads a state every frame, and decoding is the slow part. */
+    bool keep[MAX_CLIPS + 1] = {false};
+    in = (StateIn){data, (const uint8_t *)data + len, false};
+    state_get_u32(&in);
+    for (int h = 1; h <= MAX_CLIPS; h++) {
+        if (!state_get_u32(&in))
+            continue;
+        const char    *type = (const char *)state_get(&in, 64);
+        state_get_u32(&in);
+        state_get_u32(&in);
+        uint32_t       n = state_get_u32(&in);
+        const uint8_t *bytes = state_get(&in, n);
+        keep[h] = clips[h].used && clips[h].len == n && strncmp(clips[h].type, type, sizeof clips[h].type) == 0 &&
+                  memcmp(clips[h].data, bytes, n) == 0;
+    }
     for (int h = 1; h <= MAX_CLIPS; h++)
-        if (clips[h].used)
+        if (clips[h].used && !keep[h])
             close_clip(h);
     in = (StateIn){data, (const uint8_t *)data + len, false};
     start_counter = state_get_u32(&in);
@@ -325,7 +341,7 @@ static JmeStatus load(void *user, const void *data, size_t len)
         int            slot = (int)state_get_u32(&in);
         uint32_t       n = state_get_u32(&in);
         const uint8_t *bytes = state_get(&in, n);
-        if (!open_clip(h, bytes, n, type))
+        if (!keep[h] && !open_clip(h, bytes, n, type))
             continue; /* decoded before, so only out of memory gets here */
         clips[h].volume = volume;
         clips[h].slot = slot;

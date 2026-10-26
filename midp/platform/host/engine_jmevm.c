@@ -27,6 +27,8 @@ static const char *app_dir;
 static Cached     *classes, *files;
 /* The rewind history, made on the first push within options.rewind_mb. */
 static JmeRewind  *ring;
+/* The every-frame history, made on the first record within options.history_mb. */
+static JmeHistory *history;
 
 static bool ends_with(const char *s, const char *suffix)
 {
@@ -234,6 +236,8 @@ void engine_stop(void)
     midp_jme_shutdown();
     jme_rewind_destroy(ring);
     ring = NULL;
+    jme_history_destroy(history);
+    history = NULL;
     jme_destroy(vm);
     vm = NULL;
     free_cache(&classes);
@@ -292,7 +296,30 @@ bool engine_rewind_to(uint32_t back)
     if (back >= n || jme_rewind_load(ring, vm, back) != JME_OK)
         return false;
     jme_rewind_truncate(ring, n - back);
+    if (history)
+        jme_history_reset(history);
     return true;
+}
+
+bool engine_history_record(void)
+{
+    if (!history && (options.history_mb == 0 ||
+                     jme_history_create(vm, (size_t)options.history_mb << 20, &history) != JME_OK))
+        return false;
+    return jme_history_record(history) == JME_OK;
+}
+
+bool engine_history_back(void)
+{
+    if (!history || jme_history_back(history) != JME_OK)
+        return false;
+    midp_jme_screen_resync();   /* show the frame of that moment now */
+    return true;
+}
+
+uint32_t engine_history_count(void)
+{
+    return history ? jme_history_count(history) : 0;
 }
 
 bool engine_load_state(const char *path)
@@ -305,7 +332,11 @@ bool engine_load_state(const char *path)
     free(data);
     if (st != JME_OK)
         fprintf(stderr, "jmevm-midp: cannot load %s: %s\n", path, jme_status_name(st));
-    else if (ring)
-        jme_rewind_truncate(ring, 0);   /* that history belongs to another timeline */
+    else {
+        if (ring)
+            jme_rewind_truncate(ring, 0);   /* that history belongs to another timeline */
+        if (history)
+            jme_history_reset(history);
+    }
     return st == JME_OK;
 }

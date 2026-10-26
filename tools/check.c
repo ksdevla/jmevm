@@ -204,6 +204,75 @@ static int check_ring(const CheckSetup *s, JmeRewind *rw, const Point *points, i
 	return ok;
 }
 
+/*
+ * Runs the program again in a new VM with a history of `budget` bytes,
+ * recording at every snapshot point and once at the end; then steps back.
+ * Each step must give exactly the snapshot of its point (the oldest step:
+ * the state the history started from). With resume, the program continues
+ * from the middle point to its end and must finish like the full run, and
+ * the steps back go on from there. *bytes gets the bytes the history held.
+ */
+static int check_history(const CheckSetup *s, const Point *points, int npoints, size_t budget, int resume,
+		const Capture *ref, int ref_exit, uint64_t ref_ticks, const char *name, size_t *bytes) {
+	Capture out = {0};
+	JmeVM *vm = new_vm(s, &out);
+	if (vm == NULL) return fail("no memory");
+	JmeHistory *h = NULL;
+	Bytes base = {0};
+	int ok = jme_start(vm, s->main_class, s->argc, s->argv) == JME_OK;
+	if (!ok) fail("the program did not start");
+	if (ok && jme_snapshot_save(vm, collect, &base) != JME_OK) ok = fail("saving the first state failed");
+	if (ok && jme_history_create(vm, budget, &h) != JME_OK) ok = fail("%s history: no history", name);
+	int k = 0;
+	for (int steps = 0; ok && !jme_finished(vm, NULL); steps++) {
+		if (steps > 1000000) {
+			ok = fail("the program did not finish");
+			break;
+		}
+		step_once(s, vm);
+		if (jme_finished(vm, NULL) || k == npoints) continue;
+		if (jme_history_record(h) != JME_OK) ok = fail("%s history: recording failed", name);
+		k++;
+	}
+	if (ok && jme_history_record(h) != JME_OK) ok = fail("%s history: recording the end failed", name);
+	if (ok) *bytes = jme_history_size(h);
+	uint32_t count = ok ? jme_history_count(h) : 0;
+	/* The full history holds every record; the small one drops the oldest */
+	if (ok && (resume ? count != (uint32_t)npoints + 1 : count == 0 || count > (uint32_t)npoints))
+		ok = fail("%s history holds %u records for %d snapshots", name, count, npoints);
+
+	/* Step i lands on point npoints - 1 - i; the step after the last point
+	 * lands on the base. */
+	for (uint32_t i = 0; i < count && ok; i++) {
+		JmeStatus st = jme_history_back(h);
+		if (st != JME_OK) {
+			ok = fail("%s history: step back %u failed: %s", name, i, jme_status_name(st));
+			break;
+		}
+		int at = npoints - 1 - (int)i;
+		const Bytes *want = at >= 0 ? &points[at].snap : &base;
+		Bytes got = {0};
+		if (jme_snapshot_save(vm, collect, &got) != JME_OK || !same_bytes(&got, want))
+			ok = fail("%s history: step back %u is not snapshot %d", name, i, at);
+		free(got.data);
+		if (ok && resume && at == npoints / 2) {
+			size_t from = out.len;
+			int exit_code = -1;
+			if (!run_to_end(s, vm) || !jme_finished(vm, &exit_code))
+				ok = fail("%s history: the program did not finish from snapshot %d", name, at);
+			size_t rest = ref->len - points[at].out_pos;
+			if (ok && (exit_code != ref_exit || jme_ticks(vm) != ref_ticks || out.len - from != rest
+					|| memcmp(out.buf + from, ref->buf + points[at].out_pos, rest) != 0))
+				ok = fail("%s history: the program went on from snapshot %d differently", name, at);
+		}
+	}
+	jme_history_destroy(h);
+	jme_destroy(vm);
+	free(base.data);
+	free(out.buf);
+	return ok;
+}
+
 int check_snapshots(const CheckSetup *s) {
 	Capture ref = {0};
 	ref.echo = 1;
@@ -218,7 +287,7 @@ int check_snapshots(const CheckSetup *s) {
 		jme_destroy(vm);
 		return fail("the program did not start"), EXIT_CHECK;
 	}
-	if (s->rewind) jme_rewind_create((size_t)1 << 30, 8, &rw);
+	if (s->rewind == 1) jme_rewind_create((size_t)1 << 30, 8, &rw);
 	for (int steps = 0; !jme_finished(vm, NULL); steps++) {
 		if (steps > 1000000) {
 			ok = fail("the program did not finish");
@@ -254,7 +323,16 @@ int check_snapshots(const CheckSetup *s) {
 		if (ok) ok = check_damage(s, &points[0].snap);
 		if (ok) ok = check_reload(s, &points[0].snap, &points[npoints - 1].snap);
 	}
-	if (ok && s->rewind) {
+	if (ok && s->rewind == 2) {
+		size_t full = 0, small_bytes = 0;
+		ok = check_history(s, points, npoints, (size_t)1 << 30, 1, &ref, ref_exit, ref_ticks, "full", &full);
+		/* One byte less must drop the oldest records and keep the newest */
+		if (ok) ok = check_history(s, points, npoints, full - 1, 0, &ref, ref_exit, ref_ticks, "small", &small_bytes);
+		if (ok && s->stats)
+			fprintf(stderr, "history: %d snapshots, %zu bytes raw, %zu bytes of records (%.1f%%)\n", npoints,
+					raw_total, full, 100.0 * (double)full / (double)raw_total);
+	}
+	if (ok && s->rewind == 1) {
 		ok = check_ring(s, rw, points, npoints, "full");
 		if (ok && npoints >= 4 && jme_rewind_count(small) >= (uint32_t)npoints)
 			ok = fail("the small ring never dropped an entry");

@@ -294,6 +294,39 @@ JmeStatus jme_rewind_load(JmeRewind *rw, JmeVM *vm, uint32_t back);
  * ones after it with jme_rewind_truncate(rw, count - back). */
 void jme_rewind_truncate(JmeRewind *rw, uint32_t keep);
 
+/* ---- History: every-frame rewind ---- */
+
+/*
+ * Records of the VM after each step the host shows, kept uncompressed in a
+ * ring of budget_bytes (the oldest go when it is full). A record holds only
+ * what changed since the one before, so recording and going back cost what
+ * changed, not the size of the heap. Going back restores the VM exactly as
+ * it was at the record before.
+ *
+ * The history follows the VM it was made for: after anything else replaces
+ * its state (jme_snapshot_load, jme_rewind_load), call jme_history_reset.
+ */
+typedef struct JmeHistory JmeHistory;
+
+/* Starts a history of a started VM, with its current state as the base. */
+JmeStatus jme_history_create(JmeVM *vm, size_t budget_bytes, JmeHistory **out);
+void jme_history_destroy(JmeHistory *h);
+
+/* Records what changed since the newest record (or the base). */
+JmeStatus jme_history_record(JmeHistory *h);
+
+/* Puts the VM back as it was one record earlier (at the record before the
+ * newest, or at the base), dropping the newest; changes made since the
+ * newest record are undone as well. JME_E_STATE when there is no record. */
+JmeStatus jme_history_back(JmeHistory *h);
+
+/* Records held, and their bytes. */
+uint32_t jme_history_count(const JmeHistory *h);
+size_t jme_history_size(const JmeHistory *h);
+
+/* Forgets every record and takes the VM's current state as the base. */
+JmeStatus jme_history_reset(JmeHistory *h);
+
 #ifdef __cplusplus
 }
 #endif

@@ -166,6 +166,7 @@ int32_t jme_get_int(JmeVM *vm, JmeRef obj, JmeField f) {
 
 void jme_set_int(JmeVM *vm, JmeRef obj, JmeField f, int32_t v) {
 	*(i32 *)FIELD_PTR(vm, obj, f) = v;
+	CARD_MARK(vm, obj + f);
 }
 
 int64_t jme_get_long(JmeVM *vm, JmeRef obj, JmeField f) {
@@ -174,6 +175,7 @@ int64_t jme_get_long(JmeVM *vm, JmeRef obj, JmeField f) {
 
 void jme_set_long(JmeVM *vm, JmeRef obj, JmeField f, int64_t v) {
 	*(i64 *)FIELD_PTR(vm, obj, f) = v;
+	CARD_MARK(vm, obj + f);
 }
 
 JmeRef jme_get_ref(JmeVM *vm, JmeRef obj, JmeField f) {
@@ -182,6 +184,7 @@ JmeRef jme_get_ref(JmeVM *vm, JmeRef obj, JmeField f) {
 
 void jme_set_ref(JmeVM *vm, JmeRef obj, JmeField f, JmeRef v) {
 	*(Ref *)FIELD_PTR(vm, obj, f) = v;
+	CARD_MARK(vm, obj + f);
 }
 
 uint32_t jme_array_length(JmeVM *vm, JmeRef array) {
@@ -189,6 +192,8 @@ uint32_t jme_array_length(JmeVM *vm, JmeRef array) {
 }
 
 void *jme_array_data(JmeVM *vm, JmeRef array) {
+	/* The caller may write anywhere in it */
+	heap_mark(vm, array, array + object_size(vm, array));
 	return ARRAY_PTR(vm, array);
 }
 

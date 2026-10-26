@@ -132,148 +132,166 @@ static u32 class_code(const Class *c) {
 	return c != NULL ? c->id + 1 : 0;
 }
 
+static void put_header(VM *vm, Buf *b) {
+	put(b, MAGIC, 8);
+	put_u32(b, SNAP_FORMAT);
+	put_u32(b, JME_VERSION_MAJOR << 16 | JME_VERSION_MINOR << 8 | JME_VERSION_PATCH);
+	put_u32(b, vm->options.heap_bytes);
+	put_u32(b, vm->options.ticks_per_ms);
+	put_u64(b, (u64)vm->options.epoch_ms);
+}
+
+static void put_heap(VM *vm, Buf *b) {
+	size_t s = section_begin(b, SECTION('H', 'E', 'A', 'P'));
+	put_u32(b, vm->heap_top);
+	put(b, vm->heap + HEAP_START, vm->heap_top - HEAP_START);
+	section_end(b, s);
+}
+
+/* The sections after HEAP: CLAS to HOST. */
+static JmeStatus put_rest(VM *vm, Buf *b) {
+	size_t s = section_begin(b, SECTION('C', 'L', 'A', 'S'));
+	put_u32(b, vm->class_count);
+	for (u32 i = 0; i < vm->class_count; i++) {
+		const Class *c = vm->classes[i];
+		u32 n = (u32)strlen(c->name);
+		put_u32(b, n);
+		put(b, c->name, n);
+		put_u64(b, c->bytes_hash);
+	}
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('C', 'S', 'T', 'A'));
+	for (u32 i = 0; i < vm->class_count; i++) {
+		const Class *c = vm->classes[i];
+		put_u8(b, c->state);
+		put_u32(b, c->init_thread);
+		put_u32(b, c->mirror);
+		put_u32(b, c->static_count);
+		for (u32 k = 0; k < c->static_count; k++) put_u32(b, c->statics[k]);
+		u32 strings = 0;
+		u32 cp_count = c->cf != NULL ? c->cf->cp_count : 0;
+		for (u32 k = 1; k < cp_count; k++)
+			if (c->resolved_flag[k] && c->cf->cp[k].tag == CP_STRING) strings++;
+		put_u32(b, strings);
+		for (u32 k = 1; k < cp_count; k++) {
+			if (!c->resolved_flag[k] || c->cf->cp[k].tag != CP_STRING) continue;
+			put_u32(b, k);
+			put_u32(b, c->resolved[k].str);
+		}
+	}
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('S', 'T', 'R', 'S'));
+	put_u32(b, vm->interned_cap);
+	put_u32(b, vm->interned_count);
+	for (u32 i = 0; i < vm->interned_cap; i++) put_u32(b, vm->interned[i]);
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('M', 'O', 'N', 'S'));
+	put_u32(b, vm->monitor_count);
+	put_u32(b, vm->monitor_free);
+	for (u32 i = 1; i < vm->monitor_count; i++) {
+		const Monitor *m = &vm->monitors[i];
+		put_u32(b, m->owner);
+		put_u32(b, m->count);
+		put_u32(b, m->entry_head);
+		put_u32(b, m->entry_tail);
+		put_u32(b, m->wait_head);
+		put_u32(b, m->wait_tail);
+	}
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('V', 'M', 'S', 'T'));
+	put_u64(b, vm->ticks);
+	put_u32(b, vm->sched_next);
+	put_u32(b, vm->turn);
+	put_u64(b, vm->turn_end);
+	put_u32(b, vm->hash_state);
+	put_u32(b, (u32)vm->finished);
+	put_u32(b, (u32)vm->exit_code);
+	put_u32(b, vm->oom_error);
+	put_u32(b, method_code(vm, vm->main_method));
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('T', 'H', 'R', 'D'));
+	put_u32(b, vm->thread_count);
+	for (u32 i = 0; i < vm->thread_count; i++) {
+		const Thread *t = vm->threads[i];
+		put_u8(b, t->state);
+		put_u8(b, t->interrupted);
+		put_u8(b, t->timed);
+		put_u8(b, t->block_phase);
+		put_u8(b, t->granted);
+		put_u32(b, t->jthread);
+		put_u32(b, t->exception);
+		put_u32(b, t->invoke_arg);
+		put_u32(b, t->blocked_on);
+		put_u32(b, method_code(vm, t->invoke_after));
+		put_u64(b, t->wake_tick);
+		put_u32(b, t->enter_count);
+		put_u32(b, t->queue_next);
+		put_u32(b, t->join_target);
+		put_u32(b, class_code(t->init_wait));
+		put_u32(b, t->wait_channel);
+		put_u32(b, t->sp);
+		for (u32 k = 0; k < t->sp; k++) put_u32(b, t->slots[k]);
+		put(b, t->tags, t->sp);
+		put_u32(b, t->frame_count);
+		for (u32 k = 0; k < t->frame_count; k++) {
+			const Frame *f = &t->frames[k];
+			put_u32(b, method_code(vm, f->method));
+			put_u32(b, f->pc);
+			put_u32(b, f->locals);
+			put_u32(b, f->sp);
+			put_u32(b, f->flags);
+			put_u32(b, class_code(f->init_class));
+			put_u32(b, f->lock);
+		}
+	}
+	section_end(b, s);
+
+	s = section_begin(b, SECTION('H', 'O', 'S', 'T'));
+	put_u32(b, vm->host.state_count);
+	for (u32 i = 0; i < vm->host.state_count && !b->oom; i++) {
+		const HostState *h = &vm->host.states[i];
+		u32 n = (u32)strlen(h->name);
+		put_u32(b, n);
+		put(b, h->name, n);
+		size_t at = section_begin(b, 0);
+		if (h->save(h->user, collect_into, b) != JME_OK) return JME_E_STATE;
+		section_end(b, at);
+	}
+	section_end(b, s);
+	return b->oom ? JME_E_NOMEM : JME_OK;
+}
+
 JmeStatus snapshot_build(VM *vm, u8 **out, size_t *len) {
 	*out = NULL;
 	*len = 0;
 	if (!little_endian()) return JME_E_UNSUPPORTED;
 	Buf b = {0};
-	put(&b, MAGIC, 8);
-	put_u32(&b, SNAP_FORMAT);
-	put_u32(&b, JME_VERSION_MAJOR << 16 | JME_VERSION_MINOR << 8 | JME_VERSION_PATCH);
-	put_u32(&b, vm->options.heap_bytes);
-	put_u32(&b, vm->options.ticks_per_ms);
-	put_u64(&b, (u64)vm->options.epoch_ms);
-
-	size_t s = section_begin(&b, SECTION('H', 'E', 'A', 'P'));
-	put_u32(&b, vm->heap_top);
-	put(&b, vm->heap + HEAP_START, vm->heap_top - HEAP_START);
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('C', 'L', 'A', 'S'));
-	put_u32(&b, vm->class_count);
-	for (u32 i = 0; i < vm->class_count; i++) {
-		const Class *c = vm->classes[i];
-		u32 n = (u32)strlen(c->name);
-		put_u32(&b, n);
-		put(&b, c->name, n);
-		put_u64(&b, c->bytes_hash);
-	}
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('C', 'S', 'T', 'A'));
-	for (u32 i = 0; i < vm->class_count; i++) {
-		const Class *c = vm->classes[i];
-		put_u8(&b, c->state);
-		put_u32(&b, c->init_thread);
-		put_u32(&b, c->mirror);
-		put_u32(&b, c->static_count);
-		for (u32 k = 0; k < c->static_count; k++) put_u32(&b, c->statics[k]);
-		u32 strings = 0;
-		u32 cp_count = c->cf != NULL ? c->cf->cp_count : 0;
-		for (u32 k = 1; k < cp_count; k++)
-			if (c->resolved_flag[k] && c->cf->cp[k].tag == CP_STRING) strings++;
-		put_u32(&b, strings);
-		for (u32 k = 1; k < cp_count; k++) {
-			if (!c->resolved_flag[k] || c->cf->cp[k].tag != CP_STRING) continue;
-			put_u32(&b, k);
-			put_u32(&b, c->resolved[k].str);
-		}
-	}
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('S', 'T', 'R', 'S'));
-	put_u32(&b, vm->interned_cap);
-	put_u32(&b, vm->interned_count);
-	for (u32 i = 0; i < vm->interned_cap; i++) put_u32(&b, vm->interned[i]);
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('M', 'O', 'N', 'S'));
-	put_u32(&b, vm->monitor_count);
-	put_u32(&b, vm->monitor_free);
-	for (u32 i = 1; i < vm->monitor_count; i++) {
-		const Monitor *m = &vm->monitors[i];
-		put_u32(&b, m->owner);
-		put_u32(&b, m->count);
-		put_u32(&b, m->entry_head);
-		put_u32(&b, m->entry_tail);
-		put_u32(&b, m->wait_head);
-		put_u32(&b, m->wait_tail);
-	}
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('V', 'M', 'S', 'T'));
-	put_u64(&b, vm->ticks);
-	put_u32(&b, vm->sched_next);
-	put_u32(&b, vm->turn);
-	put_u64(&b, vm->turn_end);
-	put_u32(&b, vm->hash_state);
-	put_u32(&b, (u32)vm->finished);
-	put_u32(&b, (u32)vm->exit_code);
-	put_u32(&b, vm->oom_error);
-	put_u32(&b, method_code(vm, vm->main_method));
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('T', 'H', 'R', 'D'));
-	put_u32(&b, vm->thread_count);
-	for (u32 i = 0; i < vm->thread_count; i++) {
-		const Thread *t = vm->threads[i];
-		put_u8(&b, t->state);
-		put_u8(&b, t->interrupted);
-		put_u8(&b, t->timed);
-		put_u8(&b, t->block_phase);
-		put_u8(&b, t->granted);
-		put_u32(&b, t->jthread);
-		put_u32(&b, t->exception);
-		put_u32(&b, t->invoke_arg);
-		put_u32(&b, t->blocked_on);
-		put_u32(&b, method_code(vm, t->invoke_after));
-		put_u64(&b, t->wake_tick);
-		put_u32(&b, t->enter_count);
-		put_u32(&b, t->queue_next);
-		put_u32(&b, t->join_target);
-		put_u32(&b, class_code(t->init_wait));
-		put_u32(&b, t->wait_channel);
-		put_u32(&b, t->sp);
-		for (u32 k = 0; k < t->sp; k++) put_u32(&b, t->slots[k]);
-		put(&b, t->tags, t->sp);
-		put_u32(&b, t->frame_count);
-		for (u32 k = 0; k < t->frame_count; k++) {
-			const Frame *f = &t->frames[k];
-			put_u32(&b, method_code(vm, f->method));
-			put_u32(&b, f->pc);
-			put_u32(&b, f->locals);
-			put_u32(&b, f->sp);
-			put_u32(&b, f->flags);
-			put_u32(&b, class_code(f->init_class));
-			put_u32(&b, f->lock);
-		}
-	}
-	section_end(&b, s);
-
-	s = section_begin(&b, SECTION('H', 'O', 'S', 'T'));
-	put_u32(&b, vm->host.state_count);
-	for (u32 i = 0; i < vm->host.state_count && !b.oom; i++) {
-		const HostState *h = &vm->host.states[i];
-		u32 n = (u32)strlen(h->name);
-		put_u32(&b, n);
-		put(&b, h->name, n);
-		size_t at = section_begin(&b, 0);
-		if (h->save(h->user, collect_into, &b) != JME_OK) {
-			free(b.p);
-			return JME_E_STATE;
-		}
-		section_end(&b, at);
-	}
-	section_end(&b, s);
-
+	put_header(vm, &b);
+	put_heap(vm, &b);
+	JmeStatus st = put_rest(vm, &b);
 	put_u64(&b, fnv1a64(b.p, b.len));
-	if (b.oom) {
+	if (st == JME_OK && b.oom) st = JME_E_NOMEM;
+	if (st != JME_OK) {
 		free(b.p);
-		return JME_E_NOMEM;
+		return st;
 	}
 	*out = b.p;
 	*len = b.len;
 	return JME_OK;
+}
+
+JmeStatus snapshot_rest(VM *vm, u8 **buf, size_t *cap, size_t *len) {
+	Buf b = {*buf, 0, *cap, 0};
+	JmeStatus st = put_rest(vm, &b);
+	*buf = b.p;
+	*cap = b.cap;
+	*len = b.len;
+	return st;
 }
 
 JmeStatus jme_snapshot_save(JmeVM *vm, JmeWriteFn write, void *user) {
@@ -769,5 +787,186 @@ JmeStatus jme_snapshot_load(JmeVM *vm, const void *data, size_t len) {
 		*n = tmp;
 	}
 	jme_destroy(n);
+	return st;
+}
+
+/* ---- the history's restores (history.c) ---- */
+
+/* Gives a thread stacks again (it had ended, and is alive at the moment
+ * being restored), or takes them away. */
+static int thread_stacks(Thread *t, int alive) {
+	if (alive && t->slots == NULL) {
+		t->slots = calloc(THREAD_SLOTS, sizeof(Slot));
+		t->tags = calloc(THREAD_SLOTS, 1);
+		t->frames = calloc(THREAD_FRAMES, sizeof(Frame));
+		if (t->slots == NULL || t->tags == NULL || t->frames == NULL) return 0;
+	} else if (!alive && t->slots != NULL) {
+		free(t->slots);
+		free(t->tags);
+		free(t->frames);
+		t->slots = NULL;
+		t->tags = NULL;
+		t->frames = NULL;
+	}
+	return 1;
+}
+
+/*
+ * Restores the state after HEAP from rest (as snapshot_rest() made it) into
+ * vm itself, without rebuilding the VM or checking the data: the history
+ * made it from this VM's own timeline. The heap must already be restored.
+ * JME_E_UNSUPPORTED when classes were loaded since: then only a full load
+ * (snapshot_load_parts) can go back.
+ */
+JmeStatus snapshot_rest_restore(VM *vm, const u8 *rest, size_t len) {
+	Rd r = {rest, rest + len, 0};
+	int ok = 1;
+
+	Rd s = section(&r, SECTION('C', 'L', 'A', 'S'));
+	if (s.bad) return JME_E_FORMAT;
+	if (get_u32(&s) != vm->class_count) return JME_E_UNSUPPORTED;
+
+	s = section(&r, SECTION('C', 'S', 'T', 'A'));
+	for (u32 i = 0; i < vm->class_count && !s.bad; i++) {
+		Class *c = vm->classes[i];
+		c->state = (ClassState)get_u8(&s);
+		c->init_thread = get_u32(&s);
+		c->mirror = get_u32(&s);
+		if (get_u32(&s) != c->static_count) return JME_E_FORMAT;
+		for (u32 k = 0; k < c->static_count; k++) c->statics[k] = get_u32(&s);
+		u32 cp_count = c->cf != NULL ? c->cf->cp_count : 0;
+		for (u32 k = 1; k < cp_count; k++)
+			if (c->cf->cp[k].tag == CP_STRING) c->resolved_flag[k] = 0;
+		u32 strings = get_u32(&s);
+		for (u32 k = 0; k < strings && !s.bad; k++) {
+			u32 index = get_u32(&s);
+			if (index == 0 || index >= cp_count) return JME_E_FORMAT;
+			c->resolved[index].str = get_u32(&s);
+			c->resolved_flag[index] = 1;
+		}
+	}
+	if (!section_done(&s)) return JME_E_FORMAT;
+
+	s = section(&r, SECTION('S', 'T', 'R', 'S'));
+	u32 cap = get_u32(&s);
+	u32 interned = get_u32(&s);
+	if (s.bad || (size_t)(s.end - s.p) != (size_t)cap * 4) return JME_E_FORMAT;
+	if (cap != vm->interned_cap) {
+		Ref *a = realloc(vm->interned, (cap ? cap : 1) * sizeof(Ref));
+		if (a == NULL) return JME_E_NOMEM;
+		vm->interned = a;
+		vm->interned_cap = cap;
+	}
+	vm->interned_count = interned;
+	for (u32 i = 0; i < cap; i++) vm->interned[i] = get_u32(&s);
+
+	s = section(&r, SECTION('M', 'O', 'N', 'S'));
+	u32 monitors = get_u32(&s);
+	vm->monitor_free = get_u32(&s);
+	if (s.bad || (size_t)(s.end - s.p) != (size_t)(monitors ? monitors - 1 : 0) * 24) return JME_E_FORMAT;
+	if (monitors > vm->monitor_cap) {
+		Monitor *a = realloc(vm->monitors, monitors * sizeof(Monitor));
+		if (a == NULL) return JME_E_NOMEM;
+		vm->monitors = a;
+		vm->monitor_cap = monitors;
+	}
+	vm->monitor_count = monitors;
+	for (u32 i = 1; i < monitors; i++) {
+		Monitor *m = &vm->monitors[i];
+		m->owner = get_u32(&s);
+		m->count = get_u32(&s);
+		m->entry_head = get_u32(&s);
+		m->entry_tail = get_u32(&s);
+		m->wait_head = get_u32(&s);
+		m->wait_tail = get_u32(&s);
+	}
+
+	s = section(&r, SECTION('V', 'M', 'S', 'T'));
+	vm->ticks = get_u64(&s);
+	vm->sched_next = get_u32(&s);
+	vm->turn = get_u32(&s);
+	vm->turn_end = get_u64(&s);
+	vm->hash_state = get_u32(&s);
+	vm->finished = get_u32(&s) != 0;
+	vm->exit_code = (int)get_u32(&s);
+	vm->oom_error = get_u32(&s);
+	get_u32(&s);   /* the main method: the same for the whole timeline */
+	if (!section_done(&s)) return JME_E_FORMAT;
+
+	s = section(&r, SECTION('T', 'H', 'R', 'D'));
+	u32 threads = get_u32(&s);
+	if (s.bad || threads == 0) return JME_E_FORMAT;
+	while (vm->thread_count > threads) {   /* threads started since */
+		Thread *t = vm->threads[--vm->thread_count];
+		thread_stacks(t, 0);
+		free(t);
+	}
+	while (vm->thread_count < threads)     /* threads that have ended and gone */
+		if (thread_new(vm) == NULL) return JME_E_NOMEM;
+	for (u32 i = 0; i < threads; i++) {
+		Thread *t = vm->threads[i];
+		u32 state = get_u8(&s);
+		t->state = (ThreadState)state;
+		t->interrupted = (u8)get_u8(&s);
+		t->timed = (u8)get_u8(&s);
+		t->block_phase = (u8)get_u8(&s);
+		t->granted = (u8)get_u8(&s);
+		t->jthread = get_u32(&s);
+		t->exception = get_u32(&s);
+		t->invoke_arg = get_u32(&s);
+		t->blocked_on = get_u32(&s);
+		t->invoke_after = method_from(vm, get_u32(&s), &ok);
+		t->wake_tick = get_u64(&s);
+		t->enter_count = get_u32(&s);
+		t->queue_next = get_u32(&s);
+		t->join_target = get_u32(&s);
+		t->init_wait = class_from(vm, get_u32(&s), &ok);
+		t->wait_channel = get_u32(&s);
+		u32 sp = get_u32(&s);
+		if (s.bad || sp > THREAD_SLOTS) return JME_E_FORMAT;
+		if (!thread_stacks(t, state != TS_DONE)) return JME_E_NOMEM;
+		t->sp = sp;
+		const u8 *slots = get(&s, (size_t)sp * 4);
+		const u8 *tags = get(&s, sp);
+		if (slots == NULL || tags == NULL || (sp != 0 && t->slots == NULL)) return JME_E_FORMAT;
+		if (sp) {
+			memcpy(t->slots, slots, (size_t)sp * 4);   /* little-endian, as the snapshot */
+			memcpy(t->tags, tags, sp);
+		}
+		u32 frames = get_u32(&s);
+		if (s.bad || frames > THREAD_FRAMES || (frames != 0 && t->frames == NULL)) return JME_E_FORMAT;
+		t->frame_count = frames;
+		for (u32 k = 0; k < frames; k++) {
+			Frame *f = &t->frames[k];
+			f->method = method_from(vm, get_u32(&s), &ok);
+			f->pc = get_u32(&s);
+			f->locals = get_u32(&s);
+			f->sp = get_u32(&s);
+			f->flags = get_u32(&s);
+			f->init_class = class_from(vm, get_u32(&s), &ok);
+			f->lock = get_u32(&s);
+		}
+		if (s.bad || !ok) return JME_E_FORMAT;
+	}
+	if (!section_done(&s)) return JME_E_FORMAT;
+
+	Rd host = section(&r, SECTION('H', 'O', 'S', 'T'));
+	if (host.bad || r.p != r.end) return JME_E_FORMAT;
+	JmeStatus st = load_host_states(vm, &host);
+	if (st != JME_OK) return st;
+	vm->current = vm->threads[0];
+	return JME_OK;
+}
+
+/* A full, checked load of the state made of vm's heap and rest: for the
+ * steps snapshot_rest_restore() cannot take. */
+JmeStatus snapshot_load_parts(VM *vm, const u8 *rest, size_t len) {
+	Buf b = {0};
+	put_header(vm, &b);
+	put_heap(vm, &b);
+	put(&b, rest, len);
+	put_u64(&b, fnv1a64(b.p, b.len));
+	JmeStatus st = b.oom ? JME_E_NOMEM : jme_snapshot_load(vm, b.p, b.len);
+	free(b.p);
 	return st;
 }

@@ -17,7 +17,8 @@
 JmeStatus heap_init(VM *vm) {
 	vm->heap_size = vm->options.heap_bytes & ~7u;
 	vm->heap = malloc(vm->heap_size);
-	if (vm->heap == NULL) return JME_E_NOMEM;
+	vm->cards = calloc(((size_t)vm->heap_size >> CARD_SHIFT) + 1, 1);
+	if (vm->heap == NULL || vm->cards == NULL) return JME_E_NOMEM;
 	memset(vm->heap, 0, HEAP_START);
 	vm->heap_top = HEAP_START;
 	vm->hash_state = 0x2545F491u;
@@ -27,8 +28,14 @@ JmeStatus heap_init(VM *vm) {
 void heap_free(VM *vm) {
 	free(vm->heap);
 	vm->heap = NULL;
+	free(vm->cards);
+	vm->cards = NULL;
 	free(vm->c_roots);
 	vm->c_roots = NULL;
+}
+
+void heap_mark(VM *vm, u32 from, u32 to) {
+	if (to > from) memset(vm->cards + (from >> CARD_SHIFT), 1, ((to - 1) >> CARD_SHIFT) - (from >> CARD_SHIFT) + 1);
 }
 
 u32 heap_used(const VM *vm) {
@@ -77,6 +84,7 @@ i32 identity_hash(VM *vm, Ref r) {
 			h = x & ~MARK_BIT;
 		} while (h == 0);
 		o->hash = (o->hash & MARK_BIT) | h;
+		CARD_MARK(vm, r);
 	}
 	return (i32)(o->hash & ~MARK_BIT);
 }
@@ -248,6 +256,7 @@ void heap_collect(VM *vm) {
 	}
 
 	if (vm->options.gc_stress) memset(vm->heap + free_at, 0xDB, vm->heap_top - free_at);
+	heap_mark(vm, HEAP_START, vm->heap_top);   /* headers, moves, cleared referents */
 	vm->heap_top = free_at;
 	vm->gc_count++;
 	free(ms.stack);
@@ -265,6 +274,7 @@ Ref heap_alloc(VM *vm, u32 cls_id, u32 size) {
 	vm->heap_top += size;
 	memset(vm->heap + r, 0, size);
 	OBJ(vm, r)->cls = cls_id;
+	heap_mark(vm, r, r + size);
 	return r;
 }
 

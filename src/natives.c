@@ -306,6 +306,7 @@ NATIVE(system_arraycopy) {
 	if (sp < 0 || dp < 0 || n < 0 || (i64)sp + n > ARRAY_LEN(vm, src) || (i64)dp + n > ARRAY_LEN(vm, dst))
 		return throw_result(vm, "java/lang/ArrayIndexOutOfBoundsException", NULL);
 	u32 size = sc->elem_size;
+	heap_mark(vm, dst + ARRAY_DATA + (u32)dp * size, dst + ARRAY_DATA + (u32)(dp + n) * size);
 	if (!refs || class_is_assignable(sc->component, dc->component)) {
 		memmove((u8 *)ARRAY_PTR(vm, dst) + (size_t)dp * size, (u8 *)ARRAY_PTR(vm, src) + (size_t)sp * size,
 				(size_t)n * size);

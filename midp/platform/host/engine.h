@@ -11,6 +11,7 @@
 typedef struct EngineOptions {
     uint32_t heap_bytes;
     uint32_t rewind_mb;        /* memory for the rewind history; 0: 256 MB */
+    uint32_t history_mb;       /* memory for the every-frame history; 0: none */
     uint32_t ticks_per_ms;
     int64_t  epoch_ms;
     bool     gc_stress;
@@ -65,5 +66,12 @@ uint32_t engine_rewind_count(void);
 /* Goes back to the entry `back` places before the newest (0: the newest),
  * dropping the newer ones. False if there is no such entry. */
 bool engine_rewind_to(uint32_t back);
+
+/* The every-frame history (jme_history): record after each frame shown; go
+ * back one record, exactly. False without a history (history_mb 0) or when
+ * there is nothing to go back to. Loading a state empties it. */
+bool engine_history_record(void);
+bool engine_history_back(void);
+uint32_t engine_history_count(void);
 
 #endif

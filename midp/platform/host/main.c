@@ -14,7 +14,6 @@
 #include <string.h>
 
 #define FPS          60
-#define REWIND_EVERY 6    /* frames between rewind history entries */
 #define REWIND_TEST  60   /* frames --rewind-at holds rewind for */
 
 typedef struct Options {
@@ -289,6 +288,10 @@ static bool between_frames(void)
  * window closed), -1 if it could not start. */
 static int run_once(void)
 {
+    /* Every frame shown is kept for rewinding (Backspace, --rewind-at) */
+    bool history = opt.window || opt.rewind_at >= 0;
+    if (history && opt.engine.history_mb == 0)
+        opt.engine.history_mb = 256;
     if (!engine_start(&opt.engine, &opt.app))
         return -1;
     input_reset();
@@ -300,7 +303,6 @@ static int run_once(void)
             return -1;
         frame = frames_after_load();
     }
-    bool    history = opt.window || opt.rewind_at >= 0;
     int64_t start = wall_ms();
     for (uint64_t shown = 1;; shown++) {
         if (opt.window && !window_pump())
@@ -316,13 +318,9 @@ static int run_once(void)
                 frame = frames_after_load();
         }
         if (runner.rewinding && history) {
-            /* One history entry back per frame shown, then one frame without
-             * input, so the screen shows that moment. */
-            if (engine_rewind_back()) {
-                frame = frames_after_load() + 1;
-                if (!engine_run_until(frame_end(frame)))
-                    return 1;
-            }
+            /* One frame back per frame shown, with that frame on screen */
+            if (engine_history_back())
+                frame = frames_after_load();
         } else {
             frame++;
             input_begin_frame(frame);
@@ -338,8 +336,8 @@ static int run_once(void)
                 if (!engine_save_state(quick_state()))
                     fprintf(stderr, "jmevm-midp: cannot save the state to %s\n", quick_state());
             }
-            if (history && frame % REWIND_EVERY == 0)
-                engine_rewind_push();
+            if (history)
+                engine_history_record();
         }
         if (opt.window)
             window_show();

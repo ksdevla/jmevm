@@ -67,6 +67,7 @@ static bool start(const char **argv)
     c.data_dir = argv[3];
     c.screen_w = 240;
     c.screen_h = 320;
+    c.history_mb = 64;
     c.console = console;
     return j2me_start(&c);
 }
@@ -131,8 +132,28 @@ int main(int argc, const char **argv)
         fprintf(stderr, "embed_test: rewind_to went wrong\n");
         return 1;
     }
-    /* After a load the history is gone: it belonged to another timeline. */
-    if (!j2me_load_state(argv[4]) || j2me_rewind_back()) {
+    /* The every-frame history goes back one recorded frame at a time. */
+    int64_t recorded_at[6];
+    for (int i = 0; i < 6; i++) {
+        run(300 + i * 17, 17, &after_b, &sound);
+        recorded_at[i] = j2me_time_ms();
+        if (!j2me_history_record()) {
+            fprintf(stderr, "embed_test: history recording failed\n");
+            return 1;
+        }
+    }
+    if (j2me_history_count() != 6) {
+        fprintf(stderr, "embed_test: the history holds %u frames, not 6\n", j2me_history_count());
+        return 1;
+    }
+    for (int i = 4; i >= 0; i--) {
+        if (!j2me_history_back() || j2me_time_ms() != recorded_at[i]) {
+            fprintf(stderr, "embed_test: history step back to frame %d went wrong\n", i);
+            return 1;
+        }
+    }
+    /* After a load both histories are gone: they belonged to another timeline. */
+    if (!j2me_load_state(argv[4]) || j2me_rewind_back() || j2me_history_back()) {
         fprintf(stderr, "embed_test: rewind history survived a load\n");
         return 1;
     }
